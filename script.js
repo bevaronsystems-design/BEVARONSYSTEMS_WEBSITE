@@ -682,6 +682,7 @@
           }
         });
     });
+  });
 
     /* Remove validation error while typing */
 
