@@ -318,43 +318,34 @@
         submitBtn.innerHTML = "Sending…";
       }
 
-      // Netlify Forms: encode and POST to "/"
-      var body = new URLSearchParams(new FormData(form)).toString();
+      // Submit to Google Apps Script
+      var body = new URLSearchParams();
 
-      fetch("/", {
+      Array.prototype.forEach.call(form.elements, function (field) {
+        if (!field.name || field.disabled) return;
+        if (field.type === "file") return;
+        if ((field.type === "checkbox" || field.type === "radio") && !field.checked) return;
+
+        body.append(field.name, field.value);
+      });
+
+      fetch(form.action, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: body
       })
-        .then(function (res) {
-          if (!res.ok) throw new Error("Network response was not ok");
-          setStatus("Thank you — your project inquiry was received. A project engineer will reply to you shortly.", "ok");
+        .then(function () {
+          setStatus(
+            "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
+            "ok"
+          );
           form.reset();
           if (fileLabel) fileLabel.textContent = defaultFileText;
         })
         .catch(function () {
-          // Fallback: open the visitor's mail client so the inquiry is never lost
-          setStatus("Could not submit automatically — opening your email client instead.", "err");
-          var get = function (name) {
-            var el = form.querySelector('[name="' + name + '"]');
-            return el ? String(el.value || "") : "";
-          };
-          var subject = encodeURIComponent("Hardware project inquiry — " + get("help_with"));
-          var lines = [
-            "Name: " + get("name"),
-            "Company: " + get("company"),
-            "Email: " + get("email"),
-            "Country: " + get("country"),
-            "Phone: " + get("phone"),
-            "Need help with: " + get("help_with"),
-            "Project stage: " + get("project_stage"),
-            "Estimated quantity: " + get("estimated_quantity"),
-            "Expected timeline: " + get("expected_timeline"),
-            "",
-            get("message")
-          ].join("\n");
-          window.location.href =
-            "mailto:bevaronsystem@gmail.com?subject=" + subject + "&body=" + encodeURIComponent(lines);
+          setStatus(
+            "Could not submit automatically — please try again.",
+            "err"
+          );
         })
         .finally(function () {
           if (submitBtn) {
