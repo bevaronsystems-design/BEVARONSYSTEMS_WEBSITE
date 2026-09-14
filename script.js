@@ -319,20 +319,11 @@
       }
 
       // Submit to Google Apps Script
-      var body = new URLSearchParams();
-
-      Array.prototype.forEach.call(form.elements, function (field) {
-        if (!field.name || field.disabled) return;
-        if (field.type === "file") return;
-        if ((field.type === "checkbox" || field.type === "radio") && !field.checked) return;
-
-        body.append(field.name, field.value);
-      });
-
-      fetch(form.action, {
-        method: "POST",
-        body: body
-      })
+      var formData = new FormData(form);
+       fetch(form.action, {
+          method: "POST",
+          body: formData
+       })
         .then(function () {
           setStatus(
             "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
