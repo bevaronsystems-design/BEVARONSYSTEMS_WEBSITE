@@ -403,29 +403,6 @@ Promise.all(files.map(readFileAsBase64))
       }
     }
   });
-        .then(function () {
-          setStatus(
-            "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
-            "ok"
-          );
-          form.reset();
-          if (fileLabel) fileLabel.textContent = defaultFileText;
-        })
-        .catch(function () {
-          setStatus(
-            "Could not submit automatically — please try again.",
-            "err"
-          );
-        })
-        .finally(function () {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = btnText;
-            if (window.lucide) window.lucide.createIcons();
-          }
-        });
-    });
-
     form.addEventListener("input", function (e) {
       if (e.target && e.target.hasAttribute("aria-invalid")) {
         e.target.removeAttribute("aria-invalid");
