@@ -48,7 +48,12 @@
     }
   });
 
-  runSplash();
+  /* Wait for DOM content to load before running splash */
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", runSplash);
+  } else {
+    runSplash();
+  }
 
   /* ============================================================
      2. SERVICES DATA
@@ -196,12 +201,27 @@
     return card;
   }
 
-  var grid = document.getElementById("services-grid");
+  function initServices() {
+    var grid = document.getElementById("services-grid");
 
-  if (grid) {
-    SERVICES.forEach(function (s) {
-      grid.appendChild(buildServiceCard(s));
-    });
+    if (grid) {
+      SERVICES.forEach(function (s) {
+        grid.appendChild(buildServiceCard(s));
+      });
+    }
+
+    if (
+      window.lucide &&
+      typeof window.lucide.createIcons === "function"
+    ) {
+      window.lucide.createIcons();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initServices);
+  } else {
+    initServices();
   }
 
   /* ============================================================
@@ -239,474 +259,503 @@
 
   /* Mobile menu */
 
-  var menuBtn = document.getElementById("menu-btn");
-  var mobileMenu = document.getElementById("mobile-menu");
-  var menuOpen = false;
+  function initNav() {
+    var menuBtn = document.getElementById("menu-btn");
+    var mobileMenu = document.getElementById("mobile-menu");
+    var menuOpen = false;
 
-  function setMenu(open) {
-    if (!menuBtn || !mobileMenu) return;
+    function setMenu(open) {
+      if (!menuBtn || !mobileMenu) return;
 
-    menuOpen = open;
+      menuOpen = open;
 
-    menuBtn.setAttribute(
-      "aria-expanded",
-      String(open)
+      menuBtn.setAttribute(
+        "aria-expanded",
+        String(open)
+      );
+
+      menuBtn.setAttribute(
+        "aria-label",
+        open ? "Close menu" : "Open menu"
+      );
+
+      mobileMenu.style.maxHeight = open
+        ? mobileMenu.scrollHeight + "px"
+        : "0px";
+
+      mobileMenu.style.opacity = open ? "1" : "0";
+
+      menuBtn.innerHTML =
+        '<i data-lucide="' +
+        (open ? "x" : "menu") +
+        '" class="w-6 h-6"></i>';
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+
+    if (menuBtn && mobileMenu) {
+      menuBtn.addEventListener("click", function () {
+        setMenu(!menuOpen);
+      });
+
+      mobileMenu.querySelectorAll("a").forEach(function (a) {
+        a.addEventListener("click", function () {
+          setMenu(false);
+        });
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && menuOpen) {
+          setMenu(false);
+        }
+      });
+
+      window.addEventListener("resize", function () {
+        if (window.innerWidth >= 1024 && menuOpen) {
+          setMenu(false);
+        }
+      });
+    }
+
+    /* Scrollspy */
+
+    var navLinks = Array.prototype.slice.call(
+      document.querySelectorAll(".nav-link")
     );
 
-    menuBtn.setAttribute(
-      "aria-label",
-      open ? "Close menu" : "Open menu"
-    );
+    var spyTargets = navLinks
+      .map(function (link) {
+        var id = (link.getAttribute("href") || "").replace(
+          "#",
+          ""
+        );
 
-    mobileMenu.style.maxHeight = open
-      ? mobileMenu.scrollHeight + "px"
-      : "0px";
+        return id ? document.getElementById(id) : null;
+      })
+      .filter(Boolean);
 
-    mobileMenu.style.opacity = open ? "1" : "0";
+    if (
+      "IntersectionObserver" in window &&
+      spyTargets.length
+    ) {
+      var spyObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
 
-    menuBtn.innerHTML =
-      '<i data-lucide="' +
-      (open ? "x" : "menu") +
-      '" class="w-6 h-6"></i>';
+            navLinks.forEach(function (l) {
+              l.classList.toggle(
+                "active",
+                l.getAttribute("href") ===
+                  "#" + entry.target.id
+              );
+            });
+          });
+        },
+        {
+          rootMargin: "-40% 0px -55% 0px"
+        }
+      );
 
-    if (window.lucide) {
-      window.lucide.createIcons();
+      spyTargets.forEach(function (t) {
+        spyObserver.observe(t);
+      });
     }
   }
 
-  if (menuBtn && mobileMenu) {
-    menuBtn.addEventListener("click", function () {
-      setMenu(!menuOpen);
-    });
-
-    mobileMenu.querySelectorAll("a").forEach(function (a) {
-      a.addEventListener("click", function () {
-        setMenu(false);
-      });
-    });
-
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && menuOpen) {
-        setMenu(false);
-      }
-    });
-
-    window.addEventListener("resize", function () {
-      if (window.innerWidth >= 1024 && menuOpen) {
-        setMenu(false);
-      }
-    });
-  }
-
-  /* Scrollspy */
-
-  var navLinks = Array.prototype.slice.call(
-    document.querySelectorAll(".nav-link")
-  );
-
-  var spyTargets = navLinks
-    .map(function (link) {
-      var id = (link.getAttribute("href") || "").replace(
-        "#",
-        ""
-      );
-
-      return id ? document.getElementById(id) : null;
-    })
-    .filter(Boolean);
-
-  if (
-    "IntersectionObserver" in window &&
-    spyTargets.length
-  ) {
-    var spyObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-
-          navLinks.forEach(function (l) {
-            l.classList.toggle(
-              "active",
-              l.getAttribute("href") ===
-                "#" + entry.target.id
-            );
-          });
-        });
-      },
-      {
-        rootMargin: "-40% 0px -55% 0px"
-      }
-    );
-
-    spyTargets.forEach(function (t) {
-      spyObserver.observe(t);
-    });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initNav);
+  } else {
+    initNav();
   }
 
   /* ============================================================
      5. SCROLL REVEAL
      ============================================================ */
 
-  var revealEls = Array.prototype.slice.call(
-    document.querySelectorAll(".reveal")
-  );
-
-  if (
-    prefersReducedMotion ||
-    !("IntersectionObserver" in window)
-  ) {
-    revealEls.forEach(function (el) {
-      el.classList.add("reveal-visible");
-    });
-  } else {
-    var revealObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add(
-              "reveal-visible"
-            );
-
-            revealObserver.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        rootMargin: "0px 0px -8% 0px",
-        threshold: 0.06
-      }
+  function initReveal() {
+    var revealEls = Array.prototype.slice.call(
+      document.querySelectorAll(".reveal")
     );
 
-    revealEls.forEach(function (el) {
-      revealObserver.observe(el);
-    });
+    if (
+      prefersReducedMotion ||
+      !("IntersectionObserver" in window)
+    ) {
+      revealEls.forEach(function (el) {
+        el.classList.add("reveal-visible");
+      });
+    } else {
+      var revealObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add(
+                "reveal-visible"
+              );
+
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          rootMargin: "0px 0px -8% 0px",
+          threshold: 0.06
+        }
+      );
+
+      revealEls.forEach(function (el) {
+        revealObserver.observe(el);
+      });
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initReveal);
+  } else {
+    initReveal();
   }
 
   /* ============================================================
      6. CONTACT FORM
      ============================================================ */
 
-  var form = document.getElementById("inquiry-form");
-  var statusEl = document.getElementById("form-status");
-  var submitBtn = document.getElementById("submit-btn");
+  function initForm() {
+    var form = document.getElementById("inquiry-form");
+    var statusEl = document.getElementById("form-status");
+    var submitBtn = document.getElementById("submit-btn");
 
-  function setStatus(message, kind) {
-    if (!statusEl) return;
+    function setStatus(message, kind) {
+      if (!statusEl) return;
 
-    statusEl.textContent = message;
+      statusEl.textContent = message;
 
-    statusEl.classList.remove(
-      "hidden",
-      "form-status-ok",
-      "form-status-err"
-    );
+      statusEl.classList.remove(
+        "hidden",
+        "form-status-ok",
+        "form-status-err"
+      );
 
-    if (kind === "ok") {
-      statusEl.classList.add("form-status-ok");
+      if (kind === "ok") {
+        statusEl.classList.add("form-status-ok");
+      }
+
+      if (kind === "err") {
+        statusEl.classList.add("form-status-err");
+      }
     }
 
-    if (kind === "err") {
-      statusEl.classList.add("form-status-err");
-    }
-  }
+    function clearInvalid() {
+      if (!form) return;
 
-  function clearInvalid() {
-    if (!form) return;
-
-    form
-      .querySelectorAll("[aria-invalid]")
-      .forEach(function (el) {
-        el.removeAttribute("aria-invalid");
-      });
-  }
-
-  function validate() {
-    if (!form) return true;
-
-    clearInvalid();
-
-    var firstBad = null;
-
-    form
-      .querySelectorAll("[required]")
-      .forEach(function (field) {
-        var bad =
-          !field.value ||
-          !field.value.trim() ||
-          !field.checkValidity();
-
-        if (bad) {
-          field.setAttribute("aria-invalid", "true");
-
-          if (!firstBad) {
-            firstBad = field;
-          }
-        }
-      });
-
-    if (firstBad) {
-      setStatus(
-        "Please complete the highlighted fields.",
-        "err"
-      );
-
-      firstBad.focus();
-
-      return false;
-    }
-
-    return true;
-  }
-
-  /* File input */
-
-  var fileInput = document.getElementById("f-file");
-  var fileLabel = document.getElementById("file-label");
-  var dropzone = document.getElementById("dropzone");
-
-  var defaultFileText =
-    "Drop Gerber or BOM files here, or click to browse";
-
-  if (fileInput && fileLabel) {
-    fileInput.addEventListener("change", function () {
-      var selectedFiles = Array.prototype.slice.call(
-        fileInput.files || []
-      );
-
-      fileLabel.textContent = selectedFiles.length
-        ? selectedFiles
-            .map(function (f) {
-              return f.name;
-            })
-            .join(", ")
-        : defaultFileText;
-    });
-  }
-
-  /* Drag and drop */
-
-  if (dropzone) {
-    ["dragenter", "dragover"].forEach(function (evt) {
-      dropzone.addEventListener(evt, function (e) {
-        e.preventDefault();
-
-        dropzone.classList.add("dropzone-over");
-      });
-    });
-
-    ["dragleave", "drop"].forEach(function (evt) {
-      dropzone.addEventListener(evt, function (e) {
-        e.preventDefault();
-
-        dropzone.classList.remove(
-          "dropzone-over"
-        );
-      });
-    });
-
-    dropzone.addEventListener("drop", function (e) {
-      if (
-        fileInput &&
-        e.dataTransfer &&
-        e.dataTransfer.files.length
-      ) {
-        fileInput.files = e.dataTransfer.files;
-
-        fileInput.dispatchEvent(
-          new Event("change")
-        );
-      }
-    });
-  }
-
-  /* ============================================================
-     FORM SUBMISSION
-     ============================================================ */
-
-  if (form) {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      /* Honeypot */
-
-      var honeypot = form.querySelector(
-        'input[name="bot-field"]'
-      );
-
-      if (honeypot && honeypot.value) {
-        return;
-      }
-
-      if (!validate()) {
-        return;
-      }
-
-      var btnText = submitBtn
-        ? submitBtn.innerHTML
-        : "";
-
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = "Sending…";
-      }
-
-      /* Collect normal form fields */
-
-      var fields = {};
-      var selectedFiles = [];
-
-      Array.prototype.forEach.call(
-        form.elements,
-        function (field) {
-          if (!field.name || field.disabled) {
-            return;
-          }
-
-          /* File fields */
-
-          if (field.type === "file") {
-            Array.prototype.forEach.call(
-              field.files || [],
-              function (file) {
-                selectedFiles.push(file);
-              }
-            );
-
-            return;
-          }
-
-          /* Checkbox / radio */
-
-          if (
-            (field.type === "checkbox" ||
-              field.type === "radio") &&
-            !field.checked
-          ) {
-            return;
-          }
-
-          fields[field.name] = field.value;
-        }
-      );
-
-      /* Convert file to Base64 */
-
-      function readFileAsBase64(file) {
-        return new Promise(function (
-          resolve,
-          reject
-        ) {
-          var reader = new FileReader();
-
-          reader.onload = function () {
-            var result = reader.result;
-
-            resolve({
-              name: file.name,
-              type:
-                file.type ||
-                "application/octet-stream",
-              data: result.split(",")[1]
-            });
-          };
-
-          reader.onerror = function () {
-            reject(
-              new Error(
-                "Could not read file: " +
-                  file.name
-              )
-            );
-          };
-
-          reader.readAsDataURL(file);
+      form
+        .querySelectorAll("[aria-invalid]")
+        .forEach(function (el) {
+          el.removeAttribute("aria-invalid");
         });
-      }
+    }
 
-      /* Convert all selected files */
+    function validate() {
+      if (!form) return true;
 
-      Promise.all(
-        selectedFiles.map(readFileAsBase64)
-      )
-        .then(function (uploadedFiles) {
-          var payload = {
-            data: fields,
-            files: uploadedFiles
-          };
+      clearInvalid();
 
-          return fetch(form.action, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-              "Content-Type":
-                "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(payload)
-          });
-        })
+      var firstBad = null;
 
-        .then(function () {
-          setStatus(
-            "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
-            "ok"
-          );
+      form
+        .querySelectorAll("[required]")
+        .forEach(function (field) {
+          var bad =
+            !field.value ||
+            !field.value.trim() ||
+            !field.checkValidity();
 
-          form.reset();
+          if (bad) {
+            field.setAttribute("aria-invalid", "true");
 
-          if (fileLabel) {
-            fileLabel.textContent =
-              defaultFileText;
-          }
-        })
-
-        .catch(function (error) {
-          console.error(
-            "Form submission error:",
-            error
-          );
-
-          setStatus(
-            "Could not submit automatically — please try again.",
-            "err"
-          );
-        })
-
-        .finally(function () {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = btnText;
-
-            if (window.lucide) {
-              window.lucide.createIcons();
+            if (!firstBad) {
+              firstBad = field;
             }
           }
         });
-    });
-  
 
-    /* Remove validation error while typing */
-
-    form.addEventListener("input", function (e) {
-      if (
-        e.target &&
-        e.target.hasAttribute("aria-invalid")
-      ) {
-        e.target.removeAttribute(
-          "aria-invalid"
+      if (firstBad) {
+        setStatus(
+          "Please complete the highlighted fields.",
+          "err"
         );
+
+        firstBad.focus();
+
+        return false;
       }
-    });
+
+      return true;
+    }
+
+    /* File input */
+
+    var fileInput = document.getElementById("f-file");
+    var fileLabel = document.getElementById("file-label");
+    var dropzone = document.getElementById("dropzone");
+
+    var defaultFileText =
+      "Drop Gerber or BOM files here, or click to browse";
+
+    if (fileInput && fileLabel) {
+      fileInput.addEventListener("change", function () {
+        var selectedFiles = Array.prototype.slice.call(
+          fileInput.files || []
+        );
+
+        fileLabel.textContent = selectedFiles.length
+          ? selectedFiles
+              .map(function (f) {
+                return f.name;
+              })
+              .join(", ")
+          : defaultFileText;
+      });
+    }
+
+    /* Drag and drop */
+
+    if (dropzone) {
+      ["dragenter", "dragover"].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+          e.preventDefault();
+
+          dropzone.classList.add("dropzone-over");
+        });
+      });
+
+      ["dragleave", "drop"].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+          e.preventDefault();
+
+          dropzone.classList.remove(
+            "dropzone-over"
+          );
+        });
+      });
+
+      dropzone.addEventListener("drop", function (e) {
+        if (
+          fileInput &&
+          e.dataTransfer &&
+          e.dataTransfer.files.length
+        ) {
+          fileInput.files = e.dataTransfer.files;
+
+          fileInput.dispatchEvent(
+            new Event("change")
+          );
+        }
+      });
+    }
+
+    /* FORM SUBMISSION */
+
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        /* Honeypot */
+
+        var honeypot = form.querySelector(
+          'input[name="bot-field"]'
+        );
+
+        if (honeypot && honeypot.value) {
+          return;
+        }
+
+        if (!validate()) {
+          return;
+        }
+
+        var btnText = submitBtn
+          ? submitBtn.innerHTML
+          : "";
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = "Sending…";
+        }
+
+        /* Collect normal form fields */
+
+        var fields = {};
+        var selectedFiles = [];
+
+        Array.prototype.forEach.call(
+          form.elements,
+          function (field) {
+            if (!field.name || field.disabled) {
+              return;
+            }
+
+            /* File fields */
+
+            if (field.type === "file") {
+              Array.prototype.forEach.call(
+                field.files || [],
+                function (file) {
+                  selectedFiles.push(file);
+                }
+              );
+
+              return;
+            }
+
+            /* Checkbox / radio */
+
+            if (
+              (field.type === "checkbox" ||
+                field.type === "radio") &&
+              !field.checked
+            ) {
+              return;
+            }
+
+            fields[field.name] = field.value;
+          }
+        );
+
+        /* Convert file to Base64 */
+
+        function readFileAsBase64(file) {
+          return new Promise(function (
+            resolve,
+            reject
+          ) {
+            var reader = new FileReader();
+
+            reader.onload = function () {
+              var result = reader.result;
+
+              resolve({
+                name: file.name,
+                type:
+                  file.type ||
+                  "application/octet-stream",
+                data: result.split(",")[1]
+              });
+            };
+
+            reader.onerror = function () {
+              reject(
+                new Error(
+                  "Could not read file: " +
+                    file.name
+                )
+              );
+            };
+
+            reader.readAsDataURL(file);
+          });
+        }
+
+        /* Convert all selected files */
+
+        Promise.all(
+          selectedFiles.map(readFileAsBase64)
+        )
+          .then(function (uploadedFiles) {
+            var payload = {
+              data: fields,
+              files: uploadedFiles
+            };
+
+            return fetch(form.action, {
+              method: "POST",
+              mode: "no-cors",
+              headers: {
+                "Content-Type":
+                  "text/plain;charset=utf-8"
+              },
+              body: JSON.stringify(payload)
+            });
+          })
+
+          .then(function () {
+            setStatus(
+              "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
+              "ok"
+            );
+
+            form.reset();
+
+            if (fileLabel) {
+              fileLabel.textContent =
+                defaultFileText;
+            }
+          })
+
+          .catch(function (error) {
+            console.error(
+              "Form submission error:",
+              error
+            );
+
+            setStatus(
+              "Could not submit automatically — please try again.",
+              "err"
+            );
+          })
+
+          .finally(function () {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = btnText;
+
+              if (window.lucide) {
+                window.lucide.createIcons();
+              }
+            }
+          });
+      });
+
+      /* Remove validation error while typing */
+
+      form.addEventListener("input", function (e) {
+        if (
+          e.target &&
+          e.target.hasAttribute("aria-invalid")
+        ) {
+          e.target.removeAttribute(
+            "aria-invalid"
+          );
+        }
+      });
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initForm);
+  } else {
+    initForm();
   }
 
   /* ============================================================
      7. FOOTER YEAR
      ============================================================ */
 
-  var yearEl = document.getElementById("year");
+  function initYear() {
+    var yearEl = document.getElementById("year");
 
-  if (yearEl) {
-    yearEl.textContent = String(
-      new Date().getFullYear()
-    );
+    if (yearEl) {
+      yearEl.textContent = String(
+        new Date().getFullYear()
+      );
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initYear);
+  } else {
+    initYear();
   }
 })();
