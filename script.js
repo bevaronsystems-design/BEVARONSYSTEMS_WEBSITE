@@ -6,7 +6,8 @@
 (function () {
   "use strict";
 
-  var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var prefersReducedMotion =
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ============================================================
      1. INTRO SPLASH
@@ -23,25 +24,26 @@
       return;
     }
 
-    // Pause hero entrance animations until the splash clears
     document.body.classList.add("splash-active");
 
-    // Mark → wordmark → hold → fade (CSS keyframes handle the sequence;
-    // this timer ends the sequence inside the ~2.5s budget)
     window.setTimeout(function () {
       splash.classList.add("splash-done");
       document.body.classList.remove("splash-active");
+
       window.setTimeout(function () {
-        if (splash.parentNode) splash.parentNode.removeChild(splash);
+        if (splash.parentNode) {
+          splash.parentNode.removeChild(splash);
+        }
       }, 500);
     }, 1900);
   }
 
-  // Returning via back/forward cache: never replay the splash
   window.addEventListener("pageshow", function (e) {
     if (e.persisted) {
       var splash = document.getElementById("splash");
+
       if (splash) splash.remove();
+
       document.body.classList.remove("splash-active");
     }
   });
@@ -49,363 +51,648 @@
   runSplash();
 
   /* ============================================================
-     2. SERVICES DATA — injected grid
+     2. SERVICES DATA
      ============================================================ */
+
   var SERVICES = [
-    { icon: "cpu", title: "Hardware Engineering",
-      desc: "System architecture, schematic design and design reviews — from concept to production-ready electronics." },
-    { icon: "circuit-board", title: "PCB Design & Redesign",
-      desc: "New layouts and re-engineered boards: stackup, routing, DFM and design documentation." },
-    { icon: "activity", title: "PCB Debugging & Troubleshooting",
-      desc: "Board bring-up, fault isolation and root-cause analysis when hardware doesn't behave." },
-    { icon: "history", title: "PCB Rescue & Obsolescence Management",
-      desc: "Boards kept alive through EOL parts, redesigns and verified replacement paths." },
-    { icon: "file-search", title: "Reverse Engineering",
+    {
+      icon: "cpu",
+      title: "Hardware Engineering",
+      desc: "System architecture, schematic design and design reviews — from concept to production-ready electronics."
+    },
+    {
+      icon: "circuit-board",
+      title: "PCB Design & Redesign",
+      desc: "New layouts and re-engineered boards: stackup, routing, DFM and design documentation."
+    },
+    {
+      icon: "activity",
+      title: "PCB Debugging & Troubleshooting",
+      desc: "Board bring-up, fault isolation and root-cause analysis when hardware doesn't behave."
+    },
+    {
+      icon: "history",
+      title: "PCB Rescue & Obsolescence Management",
+      desc: "Boards kept alive through EOL parts, redesigns and verified replacement paths."
+    },
+    {
+      icon: "file-search",
+      title: "Reverse Engineering",
       desc: "Schematic recovery and design reconstruction from existing hardware or partial files.",
-      disclaimer: "UNDERTAKEN ONLY WITH PROVEN IP AUTHORIZATION" },
-    { icon: "list-checks", title: "BOM Engineering & Optimization",
-      desc: "Lifecycle audits, risk flags and cost-down options — summarized in a BOM Health Report." },
-    { icon: "package-search", title: "Component Sourcing & Procurement",
-      desc: "Availability checks, lead-time management, alternative qualification and counterfeit-risk control." },
-    { icon: "flask-conical", title: "Prototype Development",
-      desc: "Fast prototype turns, bring-up and iteration until the design is proven on the bench." },
-    { icon: "factory", title: "PCBA & Assembly",
-      desc: "Fabrication and assembly coordinated through vetted partners, inspected before anything ships." },
-    { icon: "boxes", title: "Small-Batch Manufacturing",
+      disclaimer: "UNDERTAKEN ONLY WITH PROVEN IP AUTHORIZATION"
+    },
+    {
+      icon: "list-checks",
+      title: "BOM Engineering & Optimization",
+      desc: "Lifecycle audits, risk flags and cost-down options — summarized in a BOM Health Report."
+    },
+    {
+      icon: "package-search",
+      title: "Component Sourcing & Procurement",
+      desc: "Availability checks, lead-time management, alternative qualification and counterfeit-risk control."
+    },
+    {
+      icon: "flask-conical",
+      title: "Prototype Development",
+      desc: "Fast prototype turns, bring-up and iteration until the design is proven on the bench."
+    },
+    {
+      icon: "factory",
+      title: "PCBA & Assembly",
+      desc: "Fabrication and assembly coordinated through vetted partners, inspected before anything ships."
+    },
+    {
+      icon: "boxes",
+      title: "Small-Batch Manufacturing",
       desc: "Production quantities matched to real demand — no factory minimums standing in the way.",
-      chips: ["10", "50", "100", "500", "1,000+"] },
-    { icon: "package", title: "Product Assembly / Box Build",
-      desc: "Board-to-product integration: enclosures, cabling, labeling and final assembly." },
-    { icon: "test-tube", title: "Testing & Quality Control",
-      desc: "Functional testing, fixtures and pre-shipment QC on every unit, documented per build." },
-    { icon: "microchip", title: "Embedded & Firmware",
-      desc: "Firmware development, flashing, bootloaders and board-level software integration." },
-    { icon: "box", title: "Enclosure & Mechanical Integration",
-      desc: "Mechanical design and integration so electronics, enclosure and product fit as one." },
-    { icon: "shield-check", title: "Certification & Compliance Support",
+      chips: ["10", "50", "100", "500", "1,000+"]
+    },
+    {
+      icon: "package",
+      title: "Product Assembly / Box Build",
+      desc: "Board-to-product integration: enclosures, cabling, labeling and final assembly."
+    },
+    {
+      icon: "test-tube",
+      title: "Testing & Quality Control",
+      desc: "Functional testing, fixtures and pre-shipment QC on every unit, documented per build."
+    },
+    {
+      icon: "microchip",
+      title: "Embedded & Firmware",
+      desc: "Firmware development, flashing, bootloaders and board-level software integration."
+    },
+    {
+      icon: "box",
+      title: "Enclosure & Mechanical Integration",
+      desc: "Mechanical design and integration so electronics, enclosure and product fit as one."
+    },
+    {
+      icon: "shield-check",
+      title: "Certification & Compliance Support",
       desc: "Pre-compliance guidance and test preparation for your target markets.",
-      disclaimer: "REQUIREMENTS VARY BY PRODUCT & MARKET" },
-    { icon: "ship", title: "Supply Chain Management",
-      desc: "Coordinated logistics, inventory planning and delivery — visible from PO to doorstep." },
-    { icon: "wrench", title: "Sustaining Engineering",
-      desc: "Ongoing engineering ownership for fielded products: revisions, fixes and improvements." },
-    { icon: "search-code", title: "RMA & Failure Analysis",
-      desc: "Returned-unit triage, failure analysis and corrective actions that prevent recurrence." },
-    { icon: "file-text", title: "Engineering Documentation",
-      desc: "Schematics, test reports, build records and design packages that outlast the project." }
+      disclaimer: "REQUIREMENTS VARY BY PRODUCT & MARKET"
+    },
+    {
+      icon: "ship",
+      title: "Supply Chain Management",
+      desc: "Coordinated logistics, inventory planning and delivery — visible from PO to doorstep."
+    },
+    {
+      icon: "wrench",
+      title: "Sustaining Engineering",
+      desc: "Ongoing engineering ownership for fielded products: revisions, fixes and improvements."
+    },
+    {
+      icon: "search-code",
+      title: "RMA & Failure Analysis",
+      desc: "Returned-unit triage, failure analysis and corrective actions that prevent recurrence."
+    },
+    {
+      icon: "file-text",
+      title: "Engineering Documentation",
+      desc: "Schematics, test reports, build records and design packages that outlast the project."
+    }
   ];
 
   function buildServiceCard(s) {
     var card = document.createElement("article");
+
     card.className = "service-card reveal";
 
-    var html = '<div class="service-ico"><i data-lucide="' + s.icon + '"></i></div>' +
-      "<h3>" + s.title + "</h3>" +
-      "<p>" + s.desc + "</p>";
+    var html =
+      '<div class="service-ico">' +
+      '<i data-lucide="' +
+      s.icon +
+      '"></i>' +
+      "</div>" +
+      "<h3>" +
+      s.title +
+      "</h3>" +
+      "<p>" +
+      s.desc +
+      "</p>";
 
     if (s.chips) {
-      html += '<div class="vol-chips">' +
-        s.chips.map(function (v) { return '<span class="vol-chip">' + v + "</span>"; }).join("") +
+      html +=
+        '<div class="vol-chips">' +
+        s.chips
+          .map(function (v) {
+            return '<span class="vol-chip">' + v + "</span>";
+          })
+          .join("") +
         '<span class="vol-chip">UNITS</span></div>';
     }
 
     if (s.disclaimer) {
-      html += '<p class="service-disclaimer">※ ' + s.disclaimer + "</p>";
+      html +=
+        '<p class="service-disclaimer">※ ' +
+        s.disclaimer +
+        "</p>";
     }
 
     card.innerHTML = html;
+
     return card;
   }
 
   var grid = document.getElementById("services-grid");
+
   if (grid) {
-    SERVICES.forEach(function (s) { grid.appendChild(buildServiceCard(s)); });
+    SERVICES.forEach(function (s) {
+      grid.appendChild(buildServiceCard(s));
+    });
   }
 
   /* ============================================================
-     3. LUCIDE ICONS (after all dynamic content exists)
+     3. LUCIDE ICONS
      ============================================================ */
-  if (window.lucide && typeof window.lucide.createIcons === "function") {
+
+  if (
+    window.lucide &&
+    typeof window.lucide.createIcons === "function"
+  ) {
     window.lucide.createIcons();
   }
 
   /* ============================================================
-     4. NAV — scrolled state, mobile menu, scrollspy
+     4. NAV
      ============================================================ */
+
   var nav = document.getElementById("site-nav");
 
   function onScroll() {
     if (!nav) return;
-    if (window.scrollY > 8) nav.classList.add("nav-scrolled");
-    else nav.classList.remove("nav-scrolled");
+
+    if (window.scrollY > 8) {
+      nav.classList.add("nav-scrolled");
+    } else {
+      nav.classList.remove("nav-scrolled");
+    }
   }
-  window.addEventListener("scroll", onScroll, { passive: true });
+
+  window.addEventListener("scroll", onScroll, {
+    passive: true
+  });
+
   onScroll();
 
-  // Mobile menu
+  /* Mobile menu */
+
   var menuBtn = document.getElementById("menu-btn");
   var mobileMenu = document.getElementById("mobile-menu");
   var menuOpen = false;
 
   function setMenu(open) {
     if (!menuBtn || !mobileMenu) return;
+
     menuOpen = open;
-    menuBtn.setAttribute("aria-expanded", String(open));
-    menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-    mobileMenu.style.maxHeight = open ? mobileMenu.scrollHeight + "px" : "0px";
+
+    menuBtn.setAttribute(
+      "aria-expanded",
+      String(open)
+    );
+
+    menuBtn.setAttribute(
+      "aria-label",
+      open ? "Close menu" : "Open menu"
+    );
+
+    mobileMenu.style.maxHeight = open
+      ? mobileMenu.scrollHeight + "px"
+      : "0px";
+
     mobileMenu.style.opacity = open ? "1" : "0";
-    menuBtn.innerHTML = '<i data-lucide="' + (open ? "x" : "menu") + '" class="w-6 h-6"></i>';
-    if (window.lucide) window.lucide.createIcons();
+
+    menuBtn.innerHTML =
+      '<i data-lucide="' +
+      (open ? "x" : "menu") +
+      '" class="w-6 h-6"></i>';
+
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
   }
 
   if (menuBtn && mobileMenu) {
-    menuBtn.addEventListener("click", function () { setMenu(!menuOpen); });
+    menuBtn.addEventListener("click", function () {
+      setMenu(!menuOpen);
+    });
 
     mobileMenu.querySelectorAll("a").forEach(function (a) {
-      a.addEventListener("click", function () { setMenu(false); });
+      a.addEventListener("click", function () {
+        setMenu(false);
+      });
     });
 
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && menuOpen) setMenu(false);
+      if (e.key === "Escape" && menuOpen) {
+        setMenu(false);
+      }
     });
 
     window.addEventListener("resize", function () {
-      if (window.innerWidth >= 1024 && menuOpen) setMenu(false);
+      if (window.innerWidth >= 1024 && menuOpen) {
+        setMenu(false);
+      }
     });
   }
 
-  // Scrollspy — highlight the section currently in view
-  var navLinks = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  /* Scrollspy */
+
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll(".nav-link")
+  );
+
   var spyTargets = navLinks
     .map(function (link) {
-      var id = (link.getAttribute("href") || "").replace("#", "");
+      var id = (link.getAttribute("href") || "").replace(
+        "#",
+        ""
+      );
+
       return id ? document.getElementById(id) : null;
     })
     .filter(Boolean);
 
-  if ("IntersectionObserver" in window && spyTargets.length) {
+  if (
+    "IntersectionObserver" in window &&
+    spyTargets.length
+  ) {
     var spyObserver = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
           if (!entry.isIntersecting) return;
+
           navLinks.forEach(function (l) {
             l.classList.toggle(
               "active",
-              l.getAttribute("href") === "#" + entry.target.id
+              l.getAttribute("href") ===
+                "#" + entry.target.id
             );
           });
         });
       },
-      { rootMargin: "-40% 0px -55% 0px" }
+      {
+        rootMargin: "-40% 0px -55% 0px"
+      }
     );
-    spyTargets.forEach(function (t) { spyObserver.observe(t); });
+
+    spyTargets.forEach(function (t) {
+      spyObserver.observe(t);
+    });
   }
 
   /* ============================================================
      5. SCROLL REVEAL
      ============================================================ */
-  var revealEls = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
 
-  if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-    revealEls.forEach(function (el) { el.classList.add("reveal-visible"); });
+  var revealEls = Array.prototype.slice.call(
+    document.querySelectorAll(".reveal")
+  );
+
+  if (
+    prefersReducedMotion ||
+    !("IntersectionObserver" in window)
+  ) {
+    revealEls.forEach(function (el) {
+      el.classList.add("reveal-visible");
+    });
   } else {
     var revealObserver = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
-            entry.target.classList.add("reveal-visible");
+            entry.target.classList.add(
+              "reveal-visible"
+            );
+
             revealObserver.unobserve(entry.target);
           }
         });
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.06 }
+      {
+        rootMargin: "0px 0px -8% 0px",
+        threshold: 0.06
+      }
     );
-    revealEls.forEach(function (el) { revealObserver.observe(el); });
+
+    revealEls.forEach(function (el) {
+      revealObserver.observe(el);
+    });
   }
 
   /* ============================================================
-     6. CONTACT FORM — validated + Netlify-ready
+     6. CONTACT FORM
      ============================================================ */
+
   var form = document.getElementById("inquiry-form");
   var statusEl = document.getElementById("form-status");
   var submitBtn = document.getElementById("submit-btn");
 
   function setStatus(message, kind) {
     if (!statusEl) return;
+
     statusEl.textContent = message;
-    statusEl.classList.remove("hidden", "form-status-ok", "form-status-err");
-    if (kind === "ok") statusEl.classList.add("form-status-ok");
-    if (kind === "err") statusEl.classList.add("form-status-err");
+
+    statusEl.classList.remove(
+      "hidden",
+      "form-status-ok",
+      "form-status-err"
+    );
+
+    if (kind === "ok") {
+      statusEl.classList.add("form-status-ok");
+    }
+
+    if (kind === "err") {
+      statusEl.classList.add("form-status-err");
+    }
   }
 
   function clearInvalid() {
     if (!form) return;
-    form.querySelectorAll("[aria-invalid]").forEach(function (el) {
-      el.removeAttribute("aria-invalid");
-    });
+
+    form
+      .querySelectorAll("[aria-invalid]")
+      .forEach(function (el) {
+        el.removeAttribute("aria-invalid");
+      });
   }
 
   function validate() {
     if (!form) return true;
+
     clearInvalid();
+
     var firstBad = null;
 
-    form.querySelectorAll("[required]").forEach(function (field) {
-      var bad = !field.value || !field.value.trim() || !field.checkValidity();
-      if (bad) {
-        field.setAttribute("aria-invalid", "true");
-        if (!firstBad) firstBad = field;
-      }
-    });
+    form
+      .querySelectorAll("[required]")
+      .forEach(function (field) {
+        var bad =
+          !field.value ||
+          !field.value.trim() ||
+          !field.checkValidity();
+
+        if (bad) {
+          field.setAttribute("aria-invalid", "true");
+
+          if (!firstBad) {
+            firstBad = field;
+          }
+        }
+      });
 
     if (firstBad) {
-      setStatus("Please complete the highlighted fields.", "err");
+      setStatus(
+        "Please complete the highlighted fields.",
+        "err"
+      );
+
       firstBad.focus();
+
       return false;
     }
+
     return true;
   }
 
-  // File input label + drag styling
+  /* File input */
+
   var fileInput = document.getElementById("f-file");
   var fileLabel = document.getElementById("file-label");
   var dropzone = document.getElementById("dropzone");
-  var defaultFileText = "Drop Gerber or BOM files here, or click to browse";
+
+  var defaultFileText =
+    "Drop Gerber or BOM files here, or click to browse";
 
   if (fileInput && fileLabel) {
     fileInput.addEventListener("change", function () {
-      var files = Array.prototype.slice.call(fileInput.files || []);
-      fileLabel.textContent = files.length
-        ? files.map(function (f) { return f.name; }).join(", ")
+      var selectedFiles = Array.prototype.slice.call(
+        fileInput.files || []
+      );
+
+      fileLabel.textContent = selectedFiles.length
+        ? selectedFiles
+            .map(function (f) {
+              return f.name;
+            })
+            .join(", ")
         : defaultFileText;
     });
   }
+
+  /* Drag and drop */
 
   if (dropzone) {
     ["dragenter", "dragover"].forEach(function (evt) {
       dropzone.addEventListener(evt, function (e) {
         e.preventDefault();
+
         dropzone.classList.add("dropzone-over");
       });
     });
+
     ["dragleave", "drop"].forEach(function (evt) {
       dropzone.addEventListener(evt, function (e) {
         e.preventDefault();
-        dropzone.classList.remove("dropzone-over");
+
+        dropzone.classList.remove(
+          "dropzone-over"
+        );
       });
     });
+
     dropzone.addEventListener("drop", function (e) {
-      if (fileInput && e.dataTransfer && e.dataTransfer.files.length) {
+      if (
+        fileInput &&
+        e.dataTransfer &&
+        e.dataTransfer.files.length
+      ) {
         fileInput.files = e.dataTransfer.files;
-        fileInput.dispatchEvent(new Event("change"));
+
+        fileInput.dispatchEvent(
+          new Event("change")
+        );
       }
     });
   }
+
+  /* ============================================================
+     FORM SUBMISSION
+     ============================================================ */
 
   if (form) {
     form.addEventListener("submit", function (e) {
       e.preventDefault();
 
-      // Honeypot: silently drop bots
-      var honeypot = form.querySelector('input[name="bot-field"]');
-      if (honeypot && honeypot.value) return;
+      /* Honeypot */
 
-      if (!validate()) return;
+      var honeypot = form.querySelector(
+        'input[name="bot-field"]'
+      );
 
-      var btnText = submitBtn ? submitBtn.innerHTML : "";
+      if (honeypot && honeypot.value) {
+        return;
+      }
+
+      if (!validate()) {
+        return;
+      }
+
+      var btnText = submitBtn
+        ? submitBtn.innerHTML
+        : "";
+
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = "Sending…";
       }
 
-      // Submit to Google Apps Script
+      /* Collect normal form fields */
+
       var fields = {};
-var files = [];
+      var selectedFiles = [];
 
-Array.prototype.forEach.call(form.elements, function (field) {
-  if (!field.name || field.disabled) return;
+      Array.prototype.forEach.call(
+        form.elements,
+        function (field) {
+          if (!field.name || field.disabled) {
+            return;
+          }
 
-  if (field.type === "file") {
-    Array.prototype.forEach.call(field.files || [], function (file) {
-      files.push(file);
-    });
-    return;
-  }
+          /* File fields */
 
-  if ((field.type === "checkbox" || field.type === "radio") && !field.checked) {
-    return;
-  }
+          if (field.type === "file") {
+            Array.prototype.forEach.call(
+              field.files || [],
+              function (file) {
+                selectedFiles.push(file);
+              }
+            );
 
-  fields[field.name] = field.value;
-});
+            return;
+          }
 
-function readFileAsBase64(file) {
-  return new Promise(function (resolve, reject) {
-    var reader = new FileReader();
+          /* Checkbox / radio */
 
-    reader.onload = function () {
-      var result = reader.result;
+          if (
+            (field.type === "checkbox" ||
+              field.type === "radio") &&
+            !field.checked
+          ) {
+            return;
+          }
 
-      resolve({
-        name: file.name,
-        type: file.type,
-        data: result.split(",")[1]
-      });
-    };
+          fields[field.name] = field.value;
+        }
+      );
 
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+      /* Convert file to Base64 */
 
-Promise.all(files.map(readFileAsBase64))
-  .then(function (uploadedFiles) {
+      function readFileAsBase64(file) {
+        return new Promise(function (
+          resolve,
+          reject
+        ) {
+          var reader = new FileReader();
 
-    var payload = {
-      data: fields,
-      files: uploadedFiles
-    };
+          reader.onload = function () {
+            var result = reader.result;
 
-    return fetch(form.action, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(payload)
-    });
-  })
-  .then(function () {
-    setStatus(
-      "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
-      "ok"
-    );
+            resolve({
+              name: file.name,
+              type:
+                file.type ||
+                "application/octet-stream",
+              data: result.split(",")[1]
+            });
+          };
 
-    form.reset();
+          reader.onerror = function () {
+            reject(
+              new Error(
+                "Could not read file: " +
+                  file.name
+              )
+            );
+          };
 
-    if (fileLabel) {
-      fileLabel.textContent = defaultFileText;
-    }
-  })
-  .catch(function () {
-    setStatus(
-      "Could not submit automatically — please try again.",
-      "err"
-    );
-  })
-  .finally(function () {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = btnText;
-
-      if (window.lucide) {
-        window.lucide.createIcons();
+          reader.readAsDataURL(file);
+        });
       }
-    }
-  });
+
+      /* Convert all selected files */
+
+      Promise.all(
+        selectedFiles.map(readFileAsBase64)
+      )
+        .then(function (uploadedFiles) {
+          var payload = {
+            data: fields,
+            files: uploadedFiles
+          };
+
+          return fetch(form.action, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+              "Content-Type":
+                "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify(payload)
+          });
+        })
+
+        .then(function () {
+          setStatus(
+            "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
+            "ok"
+          );
+
+          form.reset();
+
+          if (fileLabel) {
+            fileLabel.textContent =
+              defaultFileText;
+          }
+        })
+
+        .catch(function (error) {
+          console.error(
+            "Form submission error:",
+            error
+          );
+
+          setStatus(
+            "Could not submit automatically — please try again.",
+            "err"
+          );
+        })
+
+        .finally(function () {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = btnText;
+
+            if (window.lucide) {
+              window.lucide.createIcons();
+            }
+          }
+        });
+    });
+
+    /* Remove validation error while typing */
+
     form.addEventListener("input", function (e) {
-      if (e.target && e.target.hasAttribute("aria-invalid")) {
-        e.target.removeAttribute("aria-invalid");
+      if (
+        e.target &&
+        e.target.hasAttribute("aria-invalid")
+      ) {
+        e.target.removeAttribute(
+          "aria-invalid"
+        );
       }
     });
   }
@@ -413,6 +700,12 @@ Promise.all(files.map(readFileAsBase64))
   /* ============================================================
      7. FOOTER YEAR
      ============================================================ */
+
   var yearEl = document.getElementById("year");
-  if (yearEl) yearEl.textContent = String(new Date().getFullYear());
+
+  if (yearEl) {
+    yearEl.textContent = String(
+      new Date().getFullYear()
+    );
+  }
 })();
