@@ -319,11 +319,90 @@
       }
 
       // Submit to Google Apps Script
-      var formData = new FormData(form);
-       fetch(form.action, {
-          method: "POST",
-          body: formData
-       })
+      var fields = {};
+var files = [];
+
+Array.prototype.forEach.call(form.elements, function (field) {
+  if (!field.name || field.disabled) return;
+
+  if (field.type === "file") {
+    Array.prototype.forEach.call(field.files || [], function (file) {
+      files.push(file);
+    });
+    return;
+  }
+
+  if ((field.type === "checkbox" || field.type === "radio") && !field.checked) {
+    return;
+  }
+
+  fields[field.name] = field.value;
+});
+
+function readFileAsBase64(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+
+    reader.onload = function () {
+      var result = reader.result;
+
+      resolve({
+        name: file.name,
+        type: file.type,
+        data: result.split(",")[1]
+      });
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+Promise.all(files.map(readFileAsBase64))
+  .then(function (uploadedFiles) {
+
+    var payload = {
+      data: fields,
+      files: uploadedFiles
+    };
+
+    return fetch(form.action, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(payload)
+    });
+  })
+  .then(function () {
+    setStatus(
+      "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
+      "ok"
+    );
+
+    form.reset();
+
+    if (fileLabel) {
+      fileLabel.textContent = defaultFileText;
+    }
+  })
+  .catch(function () {
+    setStatus(
+      "Could not submit automatically — please try again.",
+      "err"
+    );
+  })
+  .finally(function () {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = btnText;
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+  });
         .then(function () {
           setStatus(
             "Thank you — your project inquiry was received. A project engineer will reply to you shortly.",
